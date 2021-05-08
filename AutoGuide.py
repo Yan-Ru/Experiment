@@ -175,7 +175,7 @@ for i in range(len(noFlyZones)):
 
 #無人載具連線設定
 vehicle = connect('127.0.0.1:14550', wait_ready=True)   #載具連線
-vehicle._master.param_set_send('WP_YAW_BEHAVIOR', 0)    #設定載具經過目標不轉yaw
+vehicle._master.param_set_send('WP_YAW_BEHAVIOR', 1)    #設定載具yaw朝向目標
 
 cmds = vehicle.commands
 cmds.download()
@@ -183,15 +183,14 @@ cmds.wait_ready()
 Home = vehicle.home_location
 
 #開始接收各機起飛位置
-# receive = GetHomeLoc()
-# receive.Copter0Home = (Home, b'T')
-# receive.start()
+receive = GetHomeLoc()
+receive.Copter0Home = (Home, b'T')
+receive.start()
 
 arm_and_takeoff(16)
 
 #分配各機飛行任務
-#CopterHome = [receive.Copter0Home[0],receive.Copter1Home[0],receive.Copter2Home[0]]
-CopterHome = [dronekit.LocationGlobalRelative(23.729723, 120.418376, 0),dronekit.LocationGlobalRelative(23.729753, 120.418406, 0),dronekit.LocationGlobalRelative(23.729783, 120.418436, 0)]
+CopterHome = [receive.Copter0Home[0],receive.Copter1Home[0],receive.Copter2Home[0]]
 UAVRadiusList = [1,1,1]
 AssignRoute = TaskAssignment.Search(CopterHome,[path[1] for path in paths],noFlyZones,UAVRadiusList)
 

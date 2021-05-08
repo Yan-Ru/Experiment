@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from dronekit import *
 import math
 import sys
