@@ -15,8 +15,8 @@ class GetHomeLoc:
         self.Copter1Home = [None,b'F']
         self.Copter2Home = [None,b'F']
     def start(self):
-        threading.Thread(target=self.Receive,daemon=True).start()
-        threading.Thread(target=self.Sent, daemon=True).start()
+        threading.Thread(target=self.Receive).start()
+        threading.Thread(target=self.Sent).start()
         while True:
             print("接收各機當前位置")
             if self.get:
@@ -69,9 +69,9 @@ class RunDSL:
 
     def WaitObsInsert(self):      #等待障礙物產生,此處為手動input障礙物座標
         while not self._stop:
-            obs = [item.split(',') for item in input(" 障礙物經緯座標 : ").split()]
-            obs_p1 = dronekit.LocationGlobalRelative(float(obs[0][0]), float(obs[0][1]))
-            obs_p2 = dronekit.LocationGlobalRelative(float(obs[1][0]), float(obs[1][1]))
+            obs = [item for item in input(" 障礙物經緯座標 : ")]
+            obs_p1 = dronekit.LocationGlobalRelative(obs[0][0], obs[0][1], 13)
+            obs_p2 = dronekit.LocationGlobalRelative(obs[1][0], obs[1][1], 13)
 
             self.DSL.Obstacle.append([obs_p1, obs_p2])
             print(self.DSL.Obstacle)
@@ -177,7 +177,6 @@ for i in range(len(noFlyZones)):
 
 vehicle = connect('127.0.0.1:14550', wait_ready=True)   #載具連線
 vehicle._master.param_set_send('WP_YAW_BEHAVIOR', 1)    #設定載具經過目標不轉yaw
-vehicle._master.param_set_send('',)
 
 cmds = vehicle.commands
 cmds.download()
@@ -220,12 +219,16 @@ while True:
     if wp_dist < 2:
         DStarlite.index += 1
         DStarlite.DSL.initial()
-
-    if DStarlite.index == len(DStarlite.Path):
-        vehicle.mode = VehicleMode("RTL")
-        DStarlite.stop()
-
-    if vehicle.location.global_relative_frame.alt <= 0.5:
-        break
+        if DStarlite.index == len(DStarlite.Path):
+            DStarlite.stop()
+            break
+        else:
+            send_ned_velocity(0, 0, 0)
+            time.sleep(1.5)
 
     time.sleep(0.2)
+
+while True:
+    vehicle.mode = VehicleMode("RTL")
+    if vehicle.location.global_relative_frame.alt <= 0.05:
+        break
