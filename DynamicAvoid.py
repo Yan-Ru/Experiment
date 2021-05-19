@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from dronekit import *
 import math
 import sys
@@ -122,19 +123,42 @@ class DStarLite:
         next = DStarLite.Point(self.Goal)
         while len(self.S) > 1:
             for s in self.S:
-                if CalculationFormula.CrossLine(s.loc.lat,s.loc.lon,next.loc.lat,next.loc.lon,self.Succ_Obs[0].lat,self.Succ_Obs[0].lon,self.Succ_Obs[1].lat,self.Succ_Obs[1].lon):
-                    s.Key = sys.float_info.max
-                elif self.Near_NFZ != None:
-                    if CrossOrNot(s.loc,next.loc,self.UAVRadius,self.Near_NFZ):
-                        s.Key = sys.float_info.max
+                if len(self.Succ_Obs) <= 2:
+                    if self.Near_NFZ == None:
+                        if CalculationFormula.CrossLine(s.loc.lat, s.loc.lon, next.loc.lat, next.loc.lon,
+                                                        self.Succ_Obs[0].lat, self.Succ_Obs[0].lon,
+                                                        self.Succ_Obs[1].lat, self.Succ_Obs[1].lon):
+                            s.Key = sys.float_info.max
+                        else:
+                            s.Key = DStarLite.CalculateKey(s.loc, self.Goal, self.S[0].loc)
                     else:
-                        s.Key = DStarLite.CalculateKey(s.loc,self.Goal,self.S[0].loc)
+                        if CalculationFormula.CrossLine(s.loc.lat, s.loc.lon, next.loc.lat, next.loc.lon,
+                                                        self.Succ_Obs[0].lat, self.Succ_Obs[0].lon,
+                                                        self.Succ_Obs[1].lat, self.Succ_Obs[1].lon):
+                            s.Key = sys.float_info.max
+                        elif CrossOrNot(s.loc, next.loc, self.UAVRadius, self.Near_NFZ):
+                            s.Key = sys.float_info.max
+                        else:
+                            s.Key = DStarLite.CalculateKey(s.loc, next.loc, self.S[0].loc)
+                else:
+                    if self.Near_NFZ == None:
+                        if CrossOrNot(s.loc, next.loc, 1, self.Succ_Obs):
+                            s.Key = sys.float_info.max
+                        else:
+                            s.Key = DStarLite.CalculateKey(s.loc, next.loc, self.S[0].loc)
+                    else:
+                        if CrossOrNot(s.loc, next.loc, 1, self.Succ_Obs):
+                            s.Key = sys.float_info.max
+                        elif CrossOrNot(s.loc, next.loc, self.UAVRadius, self.Near_NFZ):
+                            s.Key = sys.float_info.max
+                        else:
+                            s.Key = DStarLite.CalculateKey(s.loc, next.loc, self.S[0].loc)
             next = min(self.S,key=lambda t:t.Key)
             if next == self.S[0]:
                 break
             else:
                 self.U.append(next.loc)
-                self.S.remove(next)
+                self.S = [s for s in self.S if s.Key == sys.float_info.max]
         self.U.reverse()
 
     def ScanForObstacles(self):
@@ -144,15 +168,29 @@ class DStarLite:
             return block
         else:
             for obs in self.Obstacle:
-                if CalculationFormula.CrossLine(self.Start.lat,self.Start.lon,self.Goal.lat,self.Goal.lon,obs[0].lat,obs[0].lon,obs[1].lat,obs[1].lon):
-                    self.S.append(DStarLite.Point(self.Start))
-                    block = True
+                if len(obs) > 2:
+                    if CalculationFormula.CrossLine(self.Start.lat,self.Start.lon,self.Goal.lat,self.Goal.lon,obs[0].lat,obs[0].lon,obs[1].lat,obs[1].lon):
+                        self.S.append(DStarLite.Point(self.Start))
+                        block = True
 
-                    Obs_EX = ObstacleExpand(obs,self.UAVRadius)
-                    self.S.extend([DStarLite.Point(o) for o in Obs_EX])
+                        Obs_EX = ObstacleExpand(obs,self.UAVRadius)
+                        self.S.extend([DStarLite.Point(o) for o in Obs_EX])
+                        self.Succ_Obs = obs
+                        break
+                else:
+                    if CrossOrNot(self.Start,self.Goal,1,obs):
+                        self.S.append(DStarLite.Point(self.Start))
+                        block = True
 
-                    self.Succ_Obs = obs
-                    break
+                        Obs_EX = ObstacleExpand(obs, self.UAVRadius)
+                        self.S.extend([DStarLite.Point(o) for o in Obs_EX])
+                        self.Succ_Obs = obs
+                        break
+
+
             self.Obstacle = []
 
         return block
+
+
+

@@ -68,10 +68,8 @@ class RunDSL:
     def WaitObsInsert(self):      #等待障礙物產生,此處為手動input障礙物座標
         while not self._stop:
             obs = [item for item in input(" 障礙物經緯座標 : ")]
-            obs_p1 = dronekit.LocationGlobalRelative(obs[0][0], obs[0][1], 13)
-            obs_p2 = dronekit.LocationGlobalRelative(obs[1][0], obs[1][1], 13)
 
-            self.DSL.Obstacle.append([obs_p1, obs_p2])
+            self.DSL.Obstacle.append([dronekit.LocationGlobalRelative(o[0],o[1]) for o in obs])
             print(self.DSL.Obstacle)
             time.sleep(0.5)
 
