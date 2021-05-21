@@ -60,7 +60,7 @@ class mTSP:
 
         return AnswerPointList
 
-    global final_sol_no_ch,tabulist_length,intabu_no_ch,crstabu_no_ch,m_num,iterat,RouteBalance_TF
+    global final_sol_no_ch,tabulist_length,intabu_no_ch,m_num,iterat,crstabu_no_ch,RouteBalance_TF
     final_sol_no_ch = 3
     tabulist_length = 10
     intabu_no_ch = 30
@@ -86,8 +86,6 @@ class mTSP:
             if dist_f > opt_max:
                 opt_max = dist_f
         return opt_max, opt_total
-
-
 
     @staticmethod
     def improve(Codition, StartPointNum, GoalPointNum, TargetPointNum, distanceArray):
