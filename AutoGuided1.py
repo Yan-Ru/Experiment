@@ -1,3 +1,4 @@
+#coding=utf-8
 import dronekit
 import pymysql
 import PathProgramming
@@ -7,6 +8,7 @@ from TaskAssignment import *
 import serial
 
 
+ser = serial.Serial("/dev/ttyUSB1",115200,timeout=0.4)
 ser = serial.Serial("/dev/ttyUSB1",115200,timeout=0.4)
 class GetHomeLoc:
     def __init__(self):
@@ -19,6 +21,7 @@ class GetHomeLoc:
         threading.Thread(target=self.Sent).start()
         while True:
             print("接收各機當前位置")
+	    print([self.Copter0Home,self.Copter2Home])
             if self.get:
                 print("接收完成")
                 break
@@ -179,11 +182,16 @@ vehicle._master.param_set_send('WP_YAW_BEHAVIOR', 1)    #設定載具經過目�
 cmds = vehicle.commands
 cmds.download()
 cmds.wait_ready()
-Home = vehicle.home_location
-
+Home = vehicle.location.global_relative_frame
+#Home = dronekit.LocationGlobalRelative(23.123456,123.123456,0)
+#開始接收各機起飛位置
 receive = GetHomeLoc()
-receive.Copter1Home = (Home, b'T')
+receive.Copter1Home = [Home, b'T']
 receive.start()
+
+#分配各機飛行任務
+CopterHome = [receive.Copter0Home[0],receive.Copter1Home[0],receive.Copter2Home[0]]
+
 
 arm_and_takeoff(16)
 

@@ -1,3 +1,4 @@
+#coding=utf-8
 import dronekit
 import pymysql
 import PathProgramming
@@ -18,6 +19,7 @@ class GetHomeLoc:
         threading.Thread(target=self.Sent).start()
         while True:
             print("接收各機當前位置")
+	    print([self.Copter0Home,self.Copter1Home])
             if self.get:
                 print("接收完成")
                 break
@@ -164,7 +166,7 @@ for i in range(len(paths)):
 
 cursor.execute(noFlyZones_data)
 results = cursor.fetchall()
-# 0 type,1 number,2 id,3 lat,4 lon,5 alt
+#0 type,1 number,2 id,3 lat,4 lon,5 alt
 
 noFlyZones = [[] for i in range(max([result[1] for result in results])+1)]
 for i in range(len(noFlyZones)):
@@ -178,10 +180,11 @@ cmds.download()
 cmds.wait_ready()
 
 
-Home = vehicle.home_location
+Home = vehicle.location.global_relative_frame
+#Home = dronekit.LocationGlobalRelative(23.123456,123.123456,0)
 
 receive = GetHomeLoc()
-receive.Copter2Home = (Home, b'T')
+receive.Copter2Home = [Home, b'T']
 receive.start()
 
 arm_and_takeoff(16)
